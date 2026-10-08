@@ -1189,18 +1189,35 @@ void DrawDepthBufferFog(void)
 void drawViRegBG(void)
 {
    bool drawn;
+   uint32_t available_pixels, pixels;
    FB_TO_SCREEN_INFO fb_info;
 
-   fb_info.width  = *gfx_info.VI_WIDTH_REG;
+   /* Retrom: interpret VI fields at the renderer boundary, as Angrylion does.
+    * CPU-visible register storage is unchanged. The origin is a 24-bit RDRAM
+    * address, not a host pointer or a wraparound mask for installed RAM. */
+   fb_info.width  = *gfx_info.VI_WIDTH_REG & 0xfff;
+   fb_info.addr   = *gfx_info.VI_ORIGIN_REG & 0xffffff;
+   fb_info.size   = *gfx_info.VI_STATUS_REG & 3;
+   if (fb_info.width < 200 || fb_info.size < 2 || fb_info.addr > BMASK)
+      return;
+
+   available_pixels = (BMASK + 1 - fb_info.addr) >> (fb_info.size - 1);
+   /* Check before the float-to-integer conversion and unsigned geometry math.
+    * This also rejects NaN/infinity and frames crossing the end of RDRAM. */
+   if (!(rdp.vi_height >= 1.0f &&
+         rdp.vi_height < (float)(available_pixels / fb_info.width + 1)))
+      return;
    fb_info.height = (uint32_t)rdp.vi_height;
+   pixels = fb_info.width * fb_info.height;
+   /* 16-bit reads swap adjacent halfwords in the word-swapped RDRAM image. */
+   if (fb_info.size == 2 && ((pixels - 1) | 1) >= available_pixels)
+      return;
+
    fb_info.ul_x   = 0;
    fb_info.lr_x   = fb_info.width - 1;
    fb_info.ul_y   = 0;
    fb_info.lr_y   = fb_info.height - 1;
    fb_info.opaque = 1;
-   fb_info.addr   = *gfx_info.VI_ORIGIN_REG;
-   fb_info.size   = *gfx_info.VI_STATUS_REG & 3;
-
    rdp.last_bg    = fb_info.addr;
 
    drawn          = DrawFrameBufferToScreen(&fb_info);

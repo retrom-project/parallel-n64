@@ -27,3 +27,6 @@ Release/
 **/*.sln
 **/*.vcxproj
 **/*.vcxproj.filters
+
+.retrom-build/
+__pycache__/

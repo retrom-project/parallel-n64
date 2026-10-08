@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "forkRepository": "https://github.com/retrom-project/parallel-n64",
+  "defaultBranch": "retrom/g56f4daf8ec9b",
+  "upstreamMirrorBranch": "master",
+  "upstreams": [
+    {
+      "role": "emulatorjs-core",
+      "repository": "https://github.com/EmulatorJS/parallel-n64",
+      "refType": "COMMIT",
+      "ref": "56f4daf8ec9b00d51d7db88e3c34c381294dbde0",
+      "commit": "56f4daf8ec9b00d51d7db88e3c34c381294dbde0"
+    },
+    {
+      "role": "emulatorjs-retroarch-linker",
+      "repository": "https://github.com/EmulatorJS/RetroArch",
+      "refType": "COMMIT",
+      "ref": "6dd4353937ef48b6ec0bfbdbb15d1c5992d86927",
+      "commit": "6dd4353937ef48b6ec0bfbdbb15d1c5992d86927"
+    }
+  ],
+  "adapterAbi": "emulatorjs-state-v1",
+  "releaseAssets": [
+    "parallel_n64-wasm.data",
+    "COPYING",
+    "source.tar.gz",
+    "rpg-runtime-release.json"
+  ]
+}
