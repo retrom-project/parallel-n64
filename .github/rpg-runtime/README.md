@@ -21,6 +21,9 @@ and non-direct-mapped addresses retain their existing behavior. This allows
 guest code to install exception trampolines through its uncached RAM alias
 without executing stale boot instructions. The default cached interpreter and
 the existing CACHE instruction behavior are unchanged.
+The same test exercises the production savestate PC restoration path: replaced
+RAM must invalidate decoded blocks before dispatch selects the first resumed
+instruction. Pure-interpreter restoration retains its existing behavior.
 
 Glide64 interprets the VI origin's low 24 bits and width's low 12 bits, matching
 the existing Angrylion renderer. It rejects a VI frame that cannot fit within

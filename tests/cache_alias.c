@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct precomp_instr { void (*ops)(void); };
+struct precomp_instr { void (*ops)(void); uint32_t addr; };
 struct precomp_block {
    uint32_t start, end;
    void *code, *jumps_table, *riprel_table;
@@ -18,7 +18,7 @@ static int skip_jump, r4300emu, decoded, translations;
 static struct {int r4300;} g_dev;
 static int32_t base_register, immediate;
 static int64_t value_register;
-enum { CORE_DYNAREC = 2 };
+enum { CORE_PURE_INTERPRETER = 0, CORE_INTERPRETER = 1, CORE_DYNAREC = 2 };
 static void uncompiled(void) {}
 static void old_instruction(void) {}
 static struct {void (*NOTCOMPILED)(void);} current_instruction_table = {uncompiled};
@@ -37,6 +37,7 @@ static void init_block(struct precomp_block *block)
 #define irt value_register
 #define ADD_TO_PC(n) (PC += (n))
 #define DECLARE_INSTRUCTION(name) static void name(void)
+#define jump_to(a) do {jump_to_address = (a); jump_to_func();} while (0)
 
 /* PRODUCTION_FUNCTIONS */
 
@@ -58,6 +59,7 @@ int main(int argc, char **argv)
    struct precomp_instr store[2] = {{0}, {0}};
    int data_page = 0, tlb = 0;
    assert(argc == 2);
+   r4300emu = CORE_INTERPRETER;
    if (!strcmp(argv[1], "cached-to-uncached")) {
       write_addr = 0x80000180; exec_addr = 0xa0000180;
    }
@@ -69,6 +71,21 @@ int main(int argc, char **argv)
    prepare(write_addr >> 12);
    if ((write_addr >> 12) != (exec_addr >> 12)) prepare(exec_addr >> 12);
    if (!data_page) blocks[exec_addr >> 12]->block[(exec_addr & 0xfff) / 4].ops = old_instruction;
+   if (!strncmp(argv[1], "restore-", 8)) {
+      ram[(exec_addr & 0xfff) / 4] = 0x3c1b8001; /* RAM was replaced by state loading. */
+      PC = store;
+      if (!strcmp(argv[1], "restore-pure")) r4300emu = CORE_PURE_INTERPRETER;
+      savestates_load_set_pc(exec_addr);
+      if (r4300emu == CORE_PURE_INTERPRETER) {
+         assert(decoded == 0);
+         assert(PC->addr == exec_addr);
+         assert(invalid_code[exec_addr >> 12] == 0);
+      } else {
+         assert(decoded == 1);
+         assert(PC->ops == current_instruction_table.NOTCOMPILED);
+      }
+      return 0;
+   }
    ram[(write_addr & 0xfff) / 4] = 0x24020001;
    base_register = (int32_t)write_addr;
    value_register = 0x3c1b8001; /* first instruction of a newly installed exception trampoline */

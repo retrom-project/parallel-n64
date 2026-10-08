@@ -136,7 +136,9 @@ void savestates_load_set_pc(uint32_t pc)
     else
 #endif
     {
-        generic_jump_to(pc);
+        /* RAM has already been replaced. Invalidate before selecting PC so
+         * the first resumed instruction cannot use the previous decoded block. */
         invalidate_r4300_cached_code(0,0);
+        generic_jump_to(pc);
     }
 }
