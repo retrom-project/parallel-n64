@@ -27,11 +27,11 @@ emmake make -j"4" -f Makefile platform=emscripten \
 archive=$(find . -maxdepth 1 -type f -name "${core_name}_libretro_emscripten.bc" -print)
 test -n "$archive" && test -f "$archive"
 install -m 0644 "$archive" "/work/retroarch/emulatorjs/${core_name}_libretro_emscripten.bc"
-install -m 0644 "$archive" /work/retroarch/libretro_emscripten.a
+install -m 0644 "$archive" /work/retroarch/libretro_emscripten.bc
 
 emmake make -C /work/retroarch -f Makefile.emulatorjs \
   HAVE_CHD=1 HAVE_THREADS=0 PTHREAD_POOL_SIZE=0 ASYNC=1 HAVE_OPENGLES3=1 \
-  STACK_SIZE=4194304 INITIAL_HEAP=134217728 \
+  STACK_SIZE=4194304 INITIAL_HEAP=536870912 \
   TARGET="${core_name}_libretro.js" -j"4"
 
 install -m 0644 "/work/retroarch/${core_name}_libretro.js" /output/

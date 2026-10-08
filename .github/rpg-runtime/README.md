@@ -27,7 +27,8 @@ container, and links pinned EmulatorJS RetroArch
 `6dd4353937ef48b6ec0bfbdbb15d1c5992d86927`. It emits
 `parallel_n64-wasm.data`, `COPYING`, `source.tar.gz`, and the content-addressed
 candidate descriptor. The archive retains the EmulatorJS 4.2.3 single-threaded
-loader contract. Runtime consumes the produced artifacts rather than patching
+loader contract and 512 MiB initial linear memory required by the N64 core.
+Runtime consumes the produced artifacts rather than patching
 upstream bytes during packaging.
 
 `COPYING` reproduces the upstream core's GPLv2 license. Component notices and
