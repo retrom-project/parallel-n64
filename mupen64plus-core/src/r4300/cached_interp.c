@@ -149,11 +149,28 @@ uint32_t jump_to_address;
       else name(); \
    }
 
-#define CHECK_MEMORY() \
-   if (!invalid_code[address>>12]) \
-      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != \
-          current_instruction_table.NOTCOMPILED) \
-         invalid_code[address>>12] = 1;
+static void check_memory(uint32_t addr)
+{
+   unsigned int page = addr >> 12;
+   unsigned int word = (addr & 0xFFF) / 4;
+   if (!invalid_code[page] &&
+       blocks[page]->block[word].ops != current_instruction_table.NOTCOMPILED)
+      invalid_code[page] = 1;
+
+   /* KSEG0 and KSEG1 share RAM but have separate decoded blocks. A store
+    * through an uncompiled alias must also invalidate executable code in
+    * the other alias. update_invalid_addr propagates this at the next jump.
+    * TLB-mapped stores keep their existing translation/invalidation path. */
+   if (addr >= UINT32_C(0x80000000) && addr < UINT32_C(0xc0000000))
+   {
+      page ^= 0x20000;
+      if (!invalid_code[page] &&
+          blocks[page]->block[word].ops != current_instruction_table.NOTCOMPILED)
+         invalid_code[page] = 1;
+   }
+}
+
+#define CHECK_MEMORY() check_memory(address)
 
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning

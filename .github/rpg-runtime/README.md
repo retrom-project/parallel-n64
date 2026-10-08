@@ -13,6 +13,15 @@ same assertions against an unmodified baseline. The regression exercises
 end-of-memory spans, reserved width bits, and invalid floating-point heights.
 It does not validate the tiled GPU path or replace browser acceptance.
 
+Run `python3 tests/cache_alias.py` for the cached interpreter regression. It
+exercises the production store invalidation and jump dispatch with controlled
+memory/decoder fixtures under ASan/UBSan. Stores through KSEG0 or KSEG1 must
+invalidate already decoded instructions in either alias; uncompiled data pages
+and non-direct-mapped addresses retain their existing behavior. This allows
+guest code to install exception trampolines through its uncached RAM alias
+without executing stale boot instructions. The default cached interpreter and
+the existing CACHE instruction behavior are unchanged.
+
 Glide64 interprets the VI origin's low 24 bits and width's low 12 bits, matching
 the existing Angrylion renderer. It rejects a VI frame that cannot fit within
 installed RDRAM before pointer arithmetic or float-to-integer conversion.
